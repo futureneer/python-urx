@@ -71,6 +71,9 @@ class URRobot(object):
     def is_program_running(self):
         return self.secmon.is_program_running()
 
+    def get_all_data(self):
+        return self.secmon.get_all_data()
+
     def send_program(self, prog):
         self.logger.info("Sending program: " + prog)
         self.secmon.send_program(prog)

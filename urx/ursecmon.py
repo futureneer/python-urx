@@ -307,6 +307,10 @@ class SecondaryMonitor(Thread):
             else:
                 return None
 
+    def get_all_data(self):
+        with self._dictLock:
+            return self._dict
+
     def get_all_data(self, wait=False):
         """
         return last data obtained from robot in dictionnary format
