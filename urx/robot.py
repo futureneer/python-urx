@@ -10,6 +10,7 @@ __copyright__ = "Copyright 2011-2013, Sintef Raufoss Manufacturing"
 __license__ = "GPLv3"
 
 import logging
+import rospy # DEBUG
 
 
 MATH3D = True
@@ -294,8 +295,10 @@ class URRobot(object):
         #prog = "movel(p%s, a=%s, v=%s)" % (tpose, acc, vel)
         tpose.append(acc)
         tpose.append(vel)
-        tpose.append(radius)
+        tpose.append(0.0)
+        # tpose.append(radius)
         prog = "movel(p[{},{},{},{},{},{}], a={}, v={}, r={})".format(*tpose)
+        print(prog)
         self.send_program(prog)
         if not wait:
             return None
@@ -573,6 +576,8 @@ class Robot(URRobot):
         move linear to given pose in current csys
         if pose is a list of poses then movels is called
         """
+        
+        
         t = m3d.Transform(pose)
         if relative:
             return self.add_transform_base(t, acc, vel, wait=wait, process=False)
