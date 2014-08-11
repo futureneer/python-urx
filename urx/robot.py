@@ -75,9 +75,9 @@ class URRobot(object):
     def get_all_data(self):
         return self.secmon.get_all_data()
 
-    def send_program(self, prog):
-        self.logger.info("Sending program: " + prog)
-        self.secmon.send_program(prog)
+    def send_program(self, prog, direct=False):
+        # self.logger.info("Sending program: " + prog)
+        self.secmon.send_program(prog,direct)
 
     def get_tcp_force(self, wait=True):
         """
@@ -245,7 +245,7 @@ class URRobot(object):
         jts = self.secmon.get_joint_data(wait)
         return [jts["q_actual0"], jts["q_actual1"], jts["q_actual2"], jts["q_actual3"], jts["q_actual4"], jts["q_actual5"]]
 
-    def speedl(self, velocities, acc, min_time):
+    def speedl(self, velocities, acc, min_time, direct=False):
         """
         move at given velocities until minimum min_time seconds
         """
@@ -253,7 +253,7 @@ class URRobot(object):
         vels.append(acc)
         vels.append(min_time)
         prog = "speedl([{},{},{},{},{},{}], a={}, t_min={})".format(*vels)
-        self.send_program(prog)
+        self.send_program(prog,direct)
 
     def speedj(self, velocities, acc, min_time):
         """
@@ -298,7 +298,6 @@ class URRobot(object):
         tpose.append(0.0)
         # tpose.append(radius)
         prog = "movel(p[{},{},{},{},{},{}], a={}, v={}, r={})".format(*tpose)
-        print(prog)
         self.send_program(prog)
         if not wait:
             return None
@@ -420,9 +419,6 @@ class URRobot(object):
             self.rtmon.start()
         self.rtmon.set_csys(self.csys) 
         return self.rtmon
-
-
-
 
 class Robot(URRobot):
     """
@@ -554,13 +550,13 @@ class Robot(URRobot):
         trans  = self.get_transform(wait)
         return trans.pos
 
-    def speedl(self, velocities, acc, min_time):
+    def speedl(self, velocities, acc, min_time, direct=False):
         """
         move at given velocities until minimum min_time seconds
         """
         v = self.csys.orient * m3d.Vector(velocities[:3])
         w = self.csys.orient * m3d.Vector(velocities[3:])
-        URRobot.speedl(self, np.concatenate((v.data, w.data)), acc, min_time)
+        URRobot.speedl(self, np.concatenate((v.array, w.array)), acc, min_time, direct)
 
     def speedl_tool(self, velocities, acc, min_time):
         """
@@ -569,7 +565,7 @@ class Robot(URRobot):
         pose = self.get_transform()
         v = self.csys.orient * pose.orient * m3d.Vector(velocities[:3])
         w = self.csys.orient * pose.orient * m3d.Vector(velocities[3:])
-        URRobot.speedl(self, np.concatenate((v.data, w.data)), acc, min_time)
+        URRobot.speedl(self, np.concatenate((v.array, w.array)), acc, min_time)
 
     def movel(self, pose, acc=None, vel=None, wait=True, relative=False, radius=0.01):
         """

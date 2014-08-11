@@ -12,14 +12,15 @@ if __name__ == "__main__":
         a = 0.3
         pose = rob.getl()
         print("robot tcp is at: ", pose)
-        print("absolute move in base coordinate ")
-        pose[2] += l
-        rob.movel(pose, acc=a, vel=v)
-        print("relative move in base coordinate ")
-        rob.translate((0, 0, -l), acc=a, vel=v)
-        print("relative move back and forth in tool coordinate")
-        rob.translate_tool((0, 0, -l), acc=a, vel=v)
-        rob.translate_tool((0, 0, l), acc=a, vel=v)
+        # print("absolute move in base coordinate ")
+        # pose[2] += l
+        # rob.movel(pose, acc=a, vel=v)
+        # print("relative move in base coordinate ")
+        # rob.translate((0, 0, -l), acc=a, vel=v)
+        # print("relative move back and forth in tool coordinate")
+        # rob.translate_tool((0, 0, -l), acc=a, vel=v)
+        # rob.translate_tool((0, 0, l), acc=a, vel=v)
+
     finally:
         rob.cleanup()
 

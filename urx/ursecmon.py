@@ -204,6 +204,7 @@ class SecondaryMonitor(Thread):
         self.host = host
         secondary_port = 30002    # Secondary client interface on Universal Robots
         self._s_secondary = socket.create_connection((self.host, secondary_port), timeout=0.5)
+        # self._s_secondary.settimeout(.01)
         self._prog_queue = []
         self._prog_queue_lock = Lock()
         self._dataqueue = bytes()
@@ -211,11 +212,12 @@ class SecondaryMonitor(Thread):
         self.running = False #True when robot is on and listening
         self._dataEvent = Condition()
         self.lastpacket_timestamp = 0
+        self.t = 0
 
         self.start()
         self.wait()# make sure we got some data before someone calls us
 
-    def send_program(self, prog):
+    def send_program(self, prog, direct=False):
         """
         send program to robot in URRobot format
         If another program is send while a program is running the first program is aborded. 
@@ -224,10 +226,13 @@ class SecondaryMonitor(Thread):
         self.logger.debug("Sending program: " + prog)
         if type(prog) != bytes:
             prog = prog.encode()
-        with self._prog_queue_lock:
-            self._prog_queue.append(prog + b"\n")
+        if direct:
+            with self._prog_queue_lock:
+                self.send_direct(prog)
+        else:
+            with self._prog_queue_lock:
+                self._prog_queue.append(prog + b"\n")
  
-
     def run(self):
         """
         check program execution status in the secondary client data packet we get from the robot 
@@ -237,11 +242,12 @@ class SecondaryMonitor(Thread):
         """
 
         while not self._trystop:
+
             with self._prog_queue_lock:
                 if len(self._prog_queue) > 0:
                     prog = self._prog_queue.pop(0)
                     self._s_secondary.send(prog)
-            
+
             data = self._get_data()
             try:
                 tmpdict = self._parser.parse(data)
@@ -272,6 +278,9 @@ class SecondaryMonitor(Thread):
                 #print("X: new data")
                 self._dataEvent.notifyAll()
 
+    def send_direct(self,prog):
+        self._s_secondary.send(prog)
+
     def _get_data(self):
         """
         returns something that looks like a packet, nothing is guaranted
@@ -285,7 +294,10 @@ class SecondaryMonitor(Thread):
                 return ans[0]
             else:
                 #self.logger.debug("Could not find packet in received data")
+                # self.t = time.time() # --------- DEBUG TIME
                 tmp = self._s_secondary.recv(1024)
+                # elapsed = time.time() - self.t # DEBUG TIME
+                # print(elapsed) # --------------- DEBUG TIME
                 self._dataqueue += tmp
 
     def wait(self, timeout=0.5):
